@@ -1,0 +1,4 @@
+marked.js 18.0.2
+Source: https://unpkg.com/marked@18.0.2/lib/marked.umd.js
+SHA-256: bb57ea0550c0288b78dde7650e224f8d05ef04540ca9ef42833d0ddcf136aafa
+Downloaded: 2026-04-25

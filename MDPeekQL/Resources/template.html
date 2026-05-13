@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MDPeek</title>
+  <style>{{STYLE}}</style>
+</head>
+<body>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="preview" role="tab" aria-selected="true">Preview</button>
+    <button class="tab" data-tab="source" role="tab" aria-selected="false">Source</button>
+  </nav>
+  <div id="banner" class="banner hidden">{{BANNER}}</div>
+  <main>
+    <section id="preview" class="pane active" role="tabpanel"></section>
+    <section id="source" class="pane" role="tabpanel"><pre id="source-pre"></pre></section>
+  </main>
+
+  <script>{{MARKED_JS}}</script>
+  <script>
+    (function () {
+      var MD_B64 = "{{MD_B64}}";
+      var BANNER_TEXT = "{{BANNER}}";
+
+      var bytes = Uint8Array.from(atob(MD_B64), function (c) { return c.charCodeAt(0); });
+      var md = new TextDecoder("utf-8").decode(bytes);
+
+      var previewEl = document.getElementById("preview");
+      var sourceEl = document.getElementById("source-pre");
+      var bannerEl = document.getElementById("banner");
+
+      sourceEl.textContent = md;
+
+      function stripFrontmatter(text) {
+        if (!/^---\r?\n/.test(text)) return text;
+        var rest = text.slice(text.indexOf('\n') + 1);
+        var m = rest.match(/^---[ \t]*\r?\n?/m);
+        if (!m) return text;
+        return rest.slice(rest.indexOf(m[0]) + m[0].length);
+      }
+
+      try {
+        if (typeof marked !== "undefined") {
+          marked.setOptions({ gfm: true, breaks: false });
+          previewEl.innerHTML = marked.parse(stripFrontmatter(md));
+        } else {
+          throw new Error("marked library missing");
+        }
+      } catch (e) {
+        showBanner("Render error — check Source tab: " + e.message);
+        switchTab("source");
+      }
+
+      if (BANNER_TEXT && BANNER_TEXT.length > 0) {
+        showBanner(BANNER_TEXT);
+      }
+
+      function showBanner(text) {
+        bannerEl.textContent = text;
+        bannerEl.classList.remove("hidden");
+      }
+
+      function switchTab(name) {
+        document.querySelectorAll(".tab").forEach(function (btn) {
+          var active = btn.dataset.tab === name;
+          btn.classList.toggle("active", active);
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        document.querySelectorAll(".pane").forEach(function (pane) {
+          pane.classList.toggle("active", pane.id === name);
+        });
+      }
+
+      document.querySelectorAll(".tab").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          switchTab(btn.dataset.tab);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
